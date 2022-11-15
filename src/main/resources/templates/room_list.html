@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" src="../vuejs/vuejs-2.5.16.js/"></script>
+    <script type="text/javascript" src="../vuejs/axios-0.18.0.js"></script>
+</head>
+<body>
+    <div id="listdiv">
+        <table border="1" width="500px">
+            <th colspan="100">
+                <button @click="toAdd()">添加</button>
+            </th>
+            <tr>
+                <td>
+                    房价类型:
+                    <input type="button" value="搜索">
+                </td>
+
+            <tr>
+                <th>房间号</th>
+                <th>房间类型</th>
+                <th>门市价格</th>
+                <th>房间楼层</th>
+                <th>房间状态</th>
+                <th>操作</th>
+            </tr>
+            <tr v-for="r in list">
+                <td>{{r.roomId}}</td>
+                <td>{{r.roomtype.typeName}}</td>
+                <td>{{r.roomPrice}}</td>
+                <td>{{r.roomFloor}}</td>
+                <td>{{r.roomState}}</td>
+                <td>
+                    <a href="../../main/userin">开房</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    当前{{pageInfo.pageNum}}/{{pageInfo.pages}}页，共{{pageInfo.total}}条记录
+                    <button @click="paging(1)">首页</button>
+                    <button @click="paging(pageInfo.prePage)">上一页</button>
+                    <button @click="paging(pageInfo.nextPage)">下一页</button>
+                    <button @click="paging(pageInfo.lastPage)">尾页</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="add" style="display: none">
+        <table border="1" cellspacing="0">
+            <tr>
+                <th>姓名</th>
+                <th><input v-model="userBean.userName"></th>
+            </tr>
+            <tr>
+                <th>性别</th>
+                <th><input v-model="userBean.userSex"></th>
+            </tr>
+            <tr>
+                <th>身份证</th>
+                <th>
+                    <input  v-model="userBean.userIdNumber">
+                </th>
+            </tr>
+            <tr>
+                <th>电话</th>
+                <th>
+                    <input  v-model="userBean.userPhone">
+                </th>
+            </tr>
+
+
+            <tr align="center">
+                <th colspan="100">
+                    <button @click="save()">保存</button>
+                </th>
+            </tr>
+        </table>
+    </div>
+</body>
+<script type="text/javascript">
+    new Vue({
+        el:'#listdiv',
+        data:{
+            list:[],
+            roomBean:{},
+            userBean:{},
+            pageInfo:{},
+            pageNum:1,
+            pageSize:3,
+            userIds:[]
+        },
+        methods:{
+            paging:function(pageNum){
+                if (pageNum==0){
+                    pageNum=1;
+                }
+                this.pageNum=pageNum;
+                this.findAll();
+            },
+            findAll:function(){
+                var _this=this;
+                axios.post('../room/findAll?pageNum='+this.pageNum+'&pageSize='+this.pageSize,_this.roomBean).then(function (response) {
+                    _this.list=response.data.list;
+                    _this.pageNum=response.data.pageNum;
+                    _this.pageInfo=response.data;
+
+                });
+            },
+            toAdd:function () {
+                this.roomBean={};
+                document.getElementById("add").style.display="block";
+                var _this=this;
+                axios.get('../room/getUserlist').then(function (response) {
+                    _this.glist=response.data;
+                })
+
+            },
+            save:function () {
+                var  _this=this;
+                axios.post('../room/save?userIds='+this.userIds,_this.userBean).then(function (response) {
+                    if(response.data=="ok"){
+                        alert("保存成功");
+                        document.getElementById("add").style.display="none";
+                        _this.findAll();
+                    }else {
+                        alert("保存失败");
+                    }
+                })
+            }
+
+        },
+        created:function () {
+            this.findAll();
+        }
+    })
+</script>
+</html>
